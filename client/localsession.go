@@ -18,6 +18,7 @@ package client
 
 import (
 	"context"
+
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/protocol"
 	"github.com/cloudwego/localsession/backup"
@@ -27,6 +28,10 @@ import (
 func CtxRecover(hdl backup.BackupHandler) client.Middleware {
 	return func(next client.Endpoint) client.Endpoint {
 		return func(ctx context.Context, req *protocol.Request, resp *protocol.Response) (err error) {
+			// only recover ctx in sd mode
+			if !req.Options().IsSD() {
+				return next(ctx, req, resp)
+			}
 			ctx = backup.RecoverCtxOnDemands(ctx, hdl)
 			return next(ctx, req, resp)
 		}
